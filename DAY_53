@@ -1,0 +1,170 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Binary Tree Node
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+
+// Queue node (stores tree node + horizontal distance)
+struct QNode {
+    struct Node* node;
+    int hd;
+    struct QNode* next;
+};
+
+// Map node for grouping (linked list for each hd)
+struct ListNode {
+    int data;
+    struct ListNode* next;
+};
+
+struct MapNode {
+    int hd;
+    struct ListNode* head;
+    struct MapNode* next;
+};
+
+// Create new tree node
+struct Node* createNode(int val) {
+    struct Node* temp = (struct Node*)malloc(sizeof(struct Node));
+    temp->data = val;
+    temp->left = temp->right = NULL;
+    return temp;
+}
+
+// Enqueue
+void enqueue(struct QNode** front, struct QNode** rear, struct Node* node, int hd) {
+    struct QNode* temp = (struct QNode*)malloc(sizeof(struct QNode));
+    temp->node = node;
+    temp->hd = hd;
+    temp->next = NULL;
+
+    if (*rear == NULL) {
+        *front = *rear = temp;
+        return;
+    }
+    (*rear)->next = temp;
+    *rear = temp;
+}
+
+// Dequeue
+struct QNode* dequeue(struct QNode** front, struct QNode** rear) {
+    if (*front == NULL)
+        return NULL;
+
+    struct QNode* temp = *front;
+    *front = (*front)->next;
+
+    if (*front == NULL)
+        *rear = NULL;
+
+    return temp;
+}
+
+// Insert into map (group by hd)
+void insertMap(struct MapNode** map, int hd, int data) {
+    struct MapNode* temp = *map;
+
+    // Search if hd exists
+    while (temp != NULL) {
+        if (temp->hd == hd) {
+            struct ListNode* newNode = (struct ListNode*)malloc(sizeof(struct ListNode));
+            newNode->data = data;
+            newNode->next = temp->head;
+            temp->head = newNode;
+            return;
+        }
+        temp = temp->next;
+    }
+
+    // Create new hd group
+    struct MapNode* newMap = (struct MapNode*)malloc(sizeof(struct MapNode));
+    newMap->hd = hd;
+    newMap->head = NULL;
+
+    struct ListNode* newNode = (struct ListNode*)malloc(sizeof(struct ListNode));
+    newNode->data = data;
+    newNode->next = NULL;
+    newMap->head = newNode;
+
+    newMap->next = *map;
+    *map = newMap;
+}
+
+// Find min and max hd
+void findMinMax(struct MapNode* map, int* min, int* max) {
+    while (map != NULL) {
+        if (map->hd < *min) *min = map->hd;
+        if (map->hd > *max) *max = map->hd;
+        map = map->next;
+    }
+}
+
+// Print vertical order
+void printVertical(struct MapNode* map, int min, int max) {
+    for (int i = min; i <= max; i++) {
+        struct MapNode* temp = map;
+        while (temp != NULL) {
+            if (temp->hd == i) {
+                struct ListNode* list = temp->head;
+                while (list != NULL) {
+                    printf("%d ", list->data);
+                    list = list->next;
+                }
+            }
+            temp = temp->next;
+        }
+        printf("\n");
+    }
+}
+
+// Vertical Order Traversal
+void verticalOrder(struct Node* root) {
+    if (root == NULL) return;
+
+    struct QNode* front = NULL;
+    struct QNode* rear = NULL;
+    struct MapNode* map = NULL;
+
+    enqueue(&front, &rear, root, 0);
+
+    while (front != NULL) {
+        struct QNode* temp = dequeue(&front, &rear);
+
+        struct Node* curr = temp->node;
+        int hd = temp->hd;
+
+        insertMap(&map, hd, curr->data);
+
+        if (curr->left)
+            enqueue(&front, &rear, curr->left, hd - 1);
+
+        if (curr->right)
+            enqueue(&front, &rear, curr->right, hd + 1);
+
+        free(temp);
+    }
+
+    int min = 0, max = 0;
+    findMinMax(map, &min, &max);
+
+    printVertical(map, min, max);
+}
+
+// Example
+int main() {
+    struct Node* root = createNode(1);
+    root->left = createNode(2);
+    root->right = createNode(3);
+    root->left->left = createNode(4);
+    root->left->right = createNode(5);
+    root->right->left = createNode(6);
+    root->right->right = createNode(7);
+
+    verticalOrder(root);
+
+    return 0;
+}
