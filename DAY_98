@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 1000
+
+typedef struct {
+    int start, end;
+} Interval;
+
+int cmp(const void *a, const void *b) {
+    Interval *i1 = (Interval*)a;
+    Interval *i2 = (Interval*)b;
+    return i1->start - i2->start;
+}
+
+int main() {
+    int n;
+    scanf("%d", &n);
+
+    Interval arr[MAX];
+
+    for (int i = 0; i < n; i++) {
+        scanf("%d %d", &arr[i].start, &arr[i].end);
+    }
+
+    qsort(arr, n, sizeof(Interval), cmp);
+
+    int currStart = arr[0].start;
+    int currEnd = arr[0].end;
+
+    for (int i = 1; i < n; i++) {
+        if (arr[i].start <= currEnd) {
+            if (arr[i].end > currEnd)
+                currEnd = arr[i].end;
+        } else {
+            printf("%d %d\n", currStart, currEnd);
+            currStart = arr[i].start;
+            currEnd = arr[i].end;
+        }
+    }
+
+    printf("%d %d", currStart, currEnd);
+
+    return 0;
+}
