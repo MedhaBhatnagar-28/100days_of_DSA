@@ -1,0 +1,59 @@
+```c id="p4m8xq"
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int vertex;
+    struct Node* next;
+} Node;
+
+Node* createNode(int v) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->vertex = v;
+    newNode->next = NULL;
+    return newNode;
+}
+
+void addEdge(Node* adj[], int u, int v, int directed) {
+    Node* newNode = createNode(v);
+    newNode->next = adj[u];
+    adj[u] = newNode;
+
+    if (!directed) {
+        newNode = createNode(u);
+        newNode->next = adj[v];
+        adj[v] = newNode;
+    }
+}
+
+int main() {
+    int n, m;
+    scanf("%d %d", &n, &m);
+
+    Node* adj[n];
+    for (int i = 0; i < n; i++)
+        adj[i] = NULL;
+
+    int directed;
+    scanf("%d", &directed); // 1 = directed, 0 = undirected
+
+    for (int i = 0; i < m; i++) {
+        int u, v;
+        scanf("%d %d", &u, &v);
+        addEdge(adj, u, v, directed);
+    }
+
+    // Print adjacency list
+    for (int i = 0; i < n; i++) {
+        printf("%d:", i);
+        Node* temp = adj[i];
+        while (temp) {
+            printf(" %d", temp->vertex);
+            temp = temp->next;
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
+```
